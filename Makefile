@@ -68,8 +68,9 @@ define clean-package
 endef
 
 define bundle-package
+	yarn
 	yarn parcel build -t node \
-		$(WD)/packages/$(1)/app.js \
+		$(WD)/packages/$(1)/index.js \
 		-o bundle.js \
 		-d ./packages/test-package \
 		--no-source-maps \
