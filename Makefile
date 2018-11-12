@@ -1,11 +1,32 @@
-FUNCTION_NAME="test"
-RUNTIME="nodejs8.10"
-HANDLER_NAME="handler.handler" # filename.handlerName
+#!make
+
+# Include .gitignored env vars
+include .env
+export
+
+RUNTIME = "nodejs8.10"
+HANDLER_NAME = "handler.handler" # filename.handlerName
 ROLE = ${ROLE_ARN}
-ZIP_FILE="fileb://$(shell pwd)/handler.zip"
+ZIP_FILE = "fileb://$(shell pwd)/${ZIP_FILE_PATH}" # relative with no ./
+FUNCTION_NAME = ${NAME}
 
 PACKAGES=$(shell ls packages) # list all packages
 WD = $(shell pwd)
+
+# Dangerous - Remember to set $ROLE_ARN
+create-all:
+	make package-all
+	$(foreach package, $(PACKAGES), \
+		$(call create-function,$(package)))
+	make clean-packages
+
+package-all:
+	make bundle-packages
+	make zip-packages
+
+bundle-packages:
+	$(foreach package, $(PACKAGES), \
+		$(call bundle-package,$(package)))
 
 zip-packages:
 	$(foreach package, $(PACKAGES), \
@@ -43,5 +64,26 @@ endef
 define clean-package
 	rm $(WD)/packages/$(1)/bundle.js
 	rm $(WD)/packages/$(1)/handler.zip
+
+endef
+
+define bundle-package
+	yarn parcel build -t node \
+		$(WD)/packages/$(1)/app.js \
+		-o bundle.js \
+		-d ./packages/test-package \
+		--no-source-maps \
+		--no-minify \
+		--bundle-node-modules
+
+endef
+
+define create-function
+	aws lambda create-function \
+		--function-name=$(1) \
+		--runtime=$(RUNTIME) \
+		--handler=$(HANDLER_NAME) \
+		--role=$(ROLE) \
+		--zip-file="fileb://$(WD)/packages/$(1)/handler.zip"
 
 endef
