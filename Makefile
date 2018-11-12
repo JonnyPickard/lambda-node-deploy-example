@@ -1,16 +1,19 @@
 FUNCTION_NAME="test"
 RUNTIME="nodejs8.10"
-HANDLER_NAME="index.handler" # filename.handlerName
+HANDLER_NAME="handler.handler" # filename.handlerName
 ROLE = ${ROLE_ARN}
 ZIP_FILE="fileb://$(shell pwd)/handler.zip"
 
-PACKAGES = hello world
+PACKAGES=$(shell ls packages) # list all packages
+WD = $(shell pwd)
 
-zip-function:
-	$(foreach source, $(PACKAGES), \
-		$(call print-source, $(package)))
-	# rm ./handler.zip
-	# zip handler.zip handler.js
+zip-packages:
+	$(foreach package, $(PACKAGES), \
+		$(call zip-package,$(package)))
+
+clean-packages:
+	$(foreach package, $(PACKAGES), \
+		$(call clean-package,$(package)))
 
 create-function:
 	aws lambda create-function \
@@ -30,11 +33,15 @@ delete-function:
     --function-name=$(FUNCTION_NAME)
 
 
-loop:
-	$(foreach source, $(SOURCES), \
-		$(call print-source, $(source)))
+define zip-package
+	zip -j -r $(WD)/packages/$(1)/handler.zip \
+		$(WD)/packages/$(1)/handler.js \
+		$(WD)/packages/$(1)/bundle.js
 
-define zip-code
-	zip -j handler.zip packages/test-package/main.js
+endef
+
+define clean-package
+	rm $(WD)/packages/$(1)/bundle.js
+	rm $(WD)/packages/$(1)/handler.zip
 
 endef
