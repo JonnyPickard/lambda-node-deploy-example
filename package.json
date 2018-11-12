@@ -1,0 +1,14 @@
+{
+  "name": "lambda-deploy-example",
+  "version": "1.0.0",
+  "description": "Zipping and deploying lambda functions using AWS cli",
+  "main": "handler.js",
+  "author": "",
+  "license": "ISC",
+  "scripts": {
+    "build": "parcel build -t node packages/test-package/app.js -o bundle.js -d ./packages/test-package --no-source-maps --no-minify --bundle-node-modules"
+  },
+  "dependencies": {
+    "parcel-bundler": "^1.10.3"
+  }
+}
